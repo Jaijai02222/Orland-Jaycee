@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bootstrap Professional Layout with Modals</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light text-dark">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="#">My Website</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link active" href="#home">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Home Section -->
+<div class="container my-5" id="home">
+  <h3 class="mb-3 text-primary">Class Schedule</h3>
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle" id="scheduleTable">
+          <thead class="table-primary">
+            <tr>
+              <th>Day</th>
+              <th>Subject</th>
+              <th>Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Wed/Thu</td>
+              <td>Web System and Technologies 1</td>
+              <td>10:00 - 12:00</td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-primary edit-btn" data-bs-toggle="modal" data-bs-target="#editModal">Edit</button>
+                  <button class="btn btn-sm btn-danger delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Wed/Thu</td>
+              <td>Standard American English</td>
+              <td>1:00 - 3:00</td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-primary edit-btn" data-bs-toggle="modal" data-bs-target="#editModal">Edit</button>
+                  <button class="btn btn-sm btn-danger delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Wed/Thu</td>
+              <td>Introduction to HCI</td>
+              <td>3:00 - 5:00</td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-primary edit-btn" data-bs-toggle="modal" data-bs-target="#editModal">Edit</button>
+                  <button class="btn btn-sm btn-danger delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Wed/Thu</td>
+              <td>Data Structure</td>
+              <td>5:30 - 7:30</td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-primary edit-btn" data-bs-toggle="modal" data-bs-target="#editModal">Edit</button>
+                  <button class="btn btn-sm btn-danger delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Schedule</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <div class="mb-3">
+            <label class="form-label">Day</label>
+            <input type="text" class="form-control" id="editDay" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Subject</label>
+            <input type="text" class="form-control" id="editSubject" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Time</label>
+            <input type="text" class="form-control" id="editTime" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Save changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this row?</p>
+        <div class="d-flex justify-content-end gap-2">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-danger" id="confirmDelete">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Personalized Content Table -->
+<div class="container my-5">
+  <h3 class="mb-3 text-primary">My Personal Content</h3>
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-bordered mb-0">
+          <thead class="table-success">
+            <tr>
+              <th style="width: 25%;">Menu</th>
+              <th style="width: 50%;">Details</th>
+              <th style="width: 25%;">Quick Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <!-- Left Column -->
+              <td class="align-top">
+                <div class="list-group list-group-flush">
+                  <a href="javascript:void(0)" class="list-group-item text-primary scroll-link" data-target="profile">Profile</a>
+                  <a href="javascript:void(0)" class="list-group-item text-info scroll-link" data-target="projects">Projects</a>
+                  <a href="javascript:void(0)" class="list-group-item text-warning scroll-link" data-target="goals">Goals</a>
+                  <a href="javascript:void(0)" class="list-group-item text-success scroll-link" data-target="hobbies">Hobbies</a>
+                  <a href="javascript:void(0)" class="list-group-item text-danger scroll-link" data-target="motto">Motto</a>
+                </div>
+              </td>
+
+              <!-- Middle Column -->
+              <td class="align-top">
+                <div id="detailsColumn" class="overflow-auto" style="max-height: 320px;">
+                  <div id="profile" class="p-3 mb-3 bg-primary text-white rounded">
+                    <h6 class="fw-bold">Profile</h6>
+                    <p class="mb-0">Hi! I’m a passionate web developer learning new technologies every day.</p>
+                  </div>
+                  <div id="projects" class="p-3 mb-3 bg-info text-dark rounded">
+                    <h6 class="fw-bold">Projects</h6>
+                    <p class="mb-0">Currently working on a Bootstrap-based web application with interactive features.</p>
+                  </div>
+                  <div id="goals" class="p-3 mb-3 bg-warning text-dark rounded">
+                    <h6 class="fw-bold">Goals</h6>
+                    <p class="mb-0">To become a full-stack developer and contribute to open-source projects.</p>
+                  </div>
+                  <div id="hobbies" class="p-3 mb-3 bg-success text-white rounded">
+                    <h6 class="fw-bold">Hobbies</h6>
+                    <p class="mb-0">I enjoy coding, reading tech blogs, and exploring new frameworks.</p>
+                  </div>
+                  <div id="motto" class="p-3 mb-3 bg-danger text-white rounded">
+                    <h6 class="fw-bold">Motto</h6>
+                    <p class="mb-0">Do not fear failure, but rather fear not trying.</p>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Right Column -->
+              <td class="align-top">
+                <div class="overflow-auto" style="max-height: 320px;">
+                  <div class="list-group list-group-flush">
+                    <div class="list-group-item">Update Resume</div>
+                    <div class="list-group-item">Finish Bootstrap project</div>
+                    <div class="list-group-item">Prepare for coding test</div>
+                    <div class="list-group-item">Plan weekend activity</div>
+                    <div class="list-group-item">Reply to emails</div>
+                    <div class="list-group-item">Organize study schedule</div>
+                    <div class="list-group-item">Review JavaScript concepts</div>
+                    <div class="list-group-item">Practice CSS layouts</div>
+                    <div class="list-group-item">Read tech articles</div>
+                    <div class="list-group-item">Update GitHub profile</div>
+                    <div class="list-group-item">Backup project files</div>
+                    <div class="list-group-item">Research new frameworks</div>
+                    <div class="list-group-item">Check coding forums</div>
+                    <div class="list-group-item">Plan presentation slides</div>
+                    <div class="list-group-item">Clean up workspace</div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- About Section -->
+<div class="container my-5" id="about">
+  <h3 class="text-primary">About</h3>
+  <p class="lead">This website is a demo project built with Bootstrap to showcase layout, navigation, and scrollable content areas. It includes a class schedule, personal content, and notes section.</p>
+</div>
+
+    <!-- Projects -->
+    <section id="projects" class="section">
+      <div class="floating-shapes"></div>
+      <div class="container">
+        <h2 class="orbitron">Projects</h2>
+        <div class="projects-grid">
+          <!-- Project Card 1 -->
+          <a href="bootstrap.html" class="project-card" target="_blank">
+            <i class="fa-brands fa-bootstrap"></i>
+            <h3>Bootstrap</h3>
+            <p>Explore my project built using Bootstrap framework.</p>
+          </a>
+          <!-- Project Card 2 -->
+          <a href="bootstrap-css.html" class="project-card" target="_blank">
+            <i class="fa-solid fa-code"></i>
+            <h3>Bootstrap with CSS</h3>
+            <p>Check out my styled Bootstrap project with custom CSS.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+
+<!-- Contact Section -->
+<div class="container my-5" id="contact">
+  <h3 class="text-primary">Contact</h3>
+  <p>If you’d like to reach out, you can contact me via email or phone.</p>
+  <ul class="list-group">
+    <li class="list-group-item"><strong>Email:</strong> orlan@gmail.com</li>
+    <li class="list-group-item"><strong>Phone:</strong> +123 456 789</li>
+    <li class="list-group-item"><strong>Location:</strong> Manila, Philippines</li>
+  </ul>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let currentRow = null;
+
+  // Handle Edit Button
+  document.querySelectorAll(".edit-btn").forEach(button => {
+    button.addEventListener("click", function () {
+      currentRow = this.closest("tr");
+      const cells = currentRow.querySelectorAll("td");
+
+      document.getElementById("editDay").value = cells[0].innerText;
+      document.getElementById("editSubject").value = cells[1].innerText;
+      document.getElementById("editTime").value = cells[2].innerText;
+    });
+  });
+
+  // Save Edited Data
+  document.getElementById("editForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (currentRow) {
+      const cells = currentRow.querySelectorAll("td");
+      cells[0].innerText = document.getElementById("editDay").value;
+      cells[1].innerText = document.getElementById("editSubject").value;
+      cells[2].innerText = document.getElementById("editTime").value;
+    }
+    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+  });
+
+  // Handle Delete Button
+  let rowToDelete = null;
+  document.querySelectorAll(".delete-btn").forEach(button => {
+    button.addEventListener("click", function () {
+      rowToDelete = this.closest("tr");
+    });
+  });
+
+  // Confirm Delete
+  document.getElementById("confirmDelete").addEventListener("click", function () {
+    if (rowToDelete) {
+      rowToDelete.remove();
+    }
+    bootstrap.Modal.getInstance(document.getElementById("deleteModal")).hide();
+  });
+
+  // Scroll inside middle column only
+  document.querySelectorAll(".scroll-link").forEach(link => {
+    link.addEventListener("click", function () {
+      const targetId = this.getAttribute("data-target");
+      const targetElement = document.getElementById(targetId);
+      const container = document.getElementById("detailsColumn");
+
+      if (targetElement && container) {
+        container.scrollTo({
+          top: targetElement.offsetTop - container.offsetTop,
+          behavior: "smooth"
+        });
+      }
+    });
+  });
+</script>
+
+<!-- Footer -->
+<footer class="bg-dark text-white text-center py-3 mt-5">
+  <div class="container">
+    <p class="mb-1">&copy; Orlando Junior. All Rights Reserved.</p>
+    <p class="mb-0">
+      
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
