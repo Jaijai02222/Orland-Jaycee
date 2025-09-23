@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login + Calculator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2a2a4a);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+      width: 320px;
+      text-align: center;
+    }
+    h2 { margin-bottom: 15px; }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 6px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 6px;
+      background: #7fffd4;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover { background: #40e0d0; }
+
+    /* Calculator */
+    .calculator { display: none; margin-top: 15px; }
+    .display {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      text-align: right;
+      background: #000;
+      color: #7fffd4;
+      font-size: 1.4rem;
+      border-radius: 6px;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .buttons button {
+      padding: 15px;
+      font-size: 1.1rem;
+      background: #222;
+      color: #fff;
+    }
+    .buttons button:hover { background: #333; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Login -->
+    <div id="loginBox">
+      <h2><i class="fa-solid fa-user"></i> Login</h2>
+      <input type="text" id="username" placeholder="Enter username">
+      <input type="password" id="password" placeholder="Enter password">
+      <button onclick="login()">Login</button>
+    </div>
+
+    <!-- Calculator -->
+    <div id="calculatorBox" class="calculator">
+      <h2><i class="fa-solid fa-calculator"></i> Calculator</h2>
+      <input type="text" id="calcDisplay" class="display" disabled>
+      <div class="buttons">
+        <button onclick="press('7')">7</button>
+        <button onclick="press('8')">8</button>
+        <button onclick="press('9')">9</button>
+        <button onclick="press('/')">÷</button>
+        <button onclick="press('4')">4</button>
+        <button onclick="press('5')">5</button>
+        <button onclick="press('6')">6</button>
+        <button onclick="press('*')">×</button>
+        <button onclick="press('1')">1</button>
+        <button onclick="press('2')">2</button>
+        <button onclick="press('3')">3</button>
+        <button onclick="press('-')">−</button>
+        <button onclick="press('0')">0</button>
+        <button onclick="press('.')">.</button>
+        <button onclick="calculate()">=</button>
+        <button onclick="press('+')">+</button>
+        <button onclick="clearDisplay()" style="grid-column: span 4; background: #f00;">C</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function login() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      if (user === "admin" && pass === "1234") {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('calculatorBox').style.display = 'block';
+      } else {
+        alert("Invalid credentials ❌ (Try admin / 1234)");
+      }
+    }
+
+    function press(value) {
+      document.getElementById('calcDisplay').value += value;
+    }
+    function calculate() {
+      try {
+        document.getElementById('calcDisplay').value =
+          eval(document.getElementById('calcDisplay').value);
+      } catch {
+        alert("Invalid Expression ❌");
+      }
+    }
+    function clearDisplay() {
+      document.getElementById('calcDisplay').value = "";
+    }
+  </script>
+
+</body>
+</html>
