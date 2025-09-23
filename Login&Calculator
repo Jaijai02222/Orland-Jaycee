@@ -1,140 +1,272 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login + Calculator</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #1e1e2f, #2a2a4a);
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .container {
-      background: rgba(255,255,255,0.1);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(255,255,255,0.2);
-      width: 320px;
-      text-align: center;
-    }
-    h2 { margin-bottom: 15px; }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: none;
-      border-radius: 6px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 6px;
-      background: #7fffd4;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover { background: #40e0d0; }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Galaxy Login + Calculator</title>
+<link rel="icon" href="favicon.jpeg" />
+<style>
+  :root{
+    --bg1:#071226; --bg2:#0b2236;
+    --glass: rgba(255,255,255,0.04);
+    --accent1: #7c4dff;
+    --accent2: #2db7ff;
+    --muted: #9ab9d9;
+    --error: #ff6b6b;
+    --success: #33d69f;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+  body{
+    display:flex;align-items:center;justify-content:center;
+    background: radial-gradient(circle at 10% 10%, rgba(45,183,255,0.06), transparent 10%),
+                radial-gradient(circle at 90% 80%, rgba(124,77,255,0.06), transparent 10%),
+                linear-gradient(180deg,var(--bg1),var(--bg2));
+    min-height:100vh;color:#e6f2ff;
+  }
 
-    /* Calculator */
-    .calculator { display: none; margin-top: 15px; }
-    .display {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      text-align: right;
-      background: #000;
-      color: #7fffd4;
-      font-size: 1.4rem;
-      border-radius: 6px;
-    }
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-    }
-    .buttons button {
-      padding: 15px;
-      font-size: 1.1rem;
-      background: #222;
-      color: #fff;
-    }
-    .buttons button:hover { background: #333; }
-  </style>
+  .card{
+    width:400px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border-radius:18px;
+    padding:26px;
+    box-shadow: 0 10px 40px rgba(17, 24, 39, 0.7), 0 0 36px rgba(47, 128, 255, 0.06) inset;
+    border:1px solid rgba(255,255,255,0.03);
+    text-align:center;
+  }
+  h2{margin:0 0 16px;font-weight:700;color:#a7d8ff;}
+
+  .switcher{display:flex;gap:10px;margin-bottom:14px;}
+  .switcher button{
+    flex:1;padding:10px;border-radius:10px;border:0;background:transparent;color:var(--muted);
+    cursor:pointer;font-weight:700;transition:all .18s;
+  }
+  .switcher button.active{background: linear-gradient(90deg,var(--accent1), var(--accent2)); color:#fff; box-shadow:0 8px 24px rgba(45,183,255,0.08);}
+
+  form{display:flex;flex-direction:column;gap:12px; align-items:stretch;}
+  .field{position:relative;display:flex;align-items:center;}
+  .field input[type="email"],
+  .field input[type="password"],
+  .field input[type="text"]{
+    width:100%;
+    padding:12px 44px 12px 14px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02);
+    color:#e8f6ff;
+    font-size:15px;
+    outline:none;
+    transition:box-shadow .14s, border-color .14s;
+  }
+  .field input::placeholder{color:rgba(200,220,255,0.35);}
+  .field input:focus{
+    box-shadow: 0 6px 20px rgba(45,183,255,0.06);
+    border-color: rgba(45,183,255,0.8);
+  }
+  .toggle-pass{
+    position:absolute;
+    right:6px;
+    width:32px;
+    height:32px;
+    border:none;
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+  }
+
+  .message{
+    min-height:18px;
+    text-align:left;
+    font-size:13px;
+    color:var(--error);
+    display:block;
+  }
+  .message.success{ color:var(--success); }
+
+  .btn{
+    padding:11px;border-radius:10px;border:0;font-weight:700;color:white;
+    background: linear-gradient(90deg,var(--accent1),var(--accent2));
+    cursor:pointer; box-shadow: 0 10px 30px rgba(124,77,255,0.08);
+  }
+
+  .logout-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
+  .logout-row .user{color:var(--muted); font-size:14px;}
+
+  .card.app{ width:420px; text-align:center; margin-left:18px; display:none; }
+  .calculator{display:block;}
+  .calc-display{
+    background: linear-gradient(180deg, #021621, #081a28);
+    border-radius:10px;padding:14px;text-align:right;font-size:28px;color:#9ef0ff; min-height:52px;
+    border:1px solid rgba(255,255,255,0.03); margin-bottom:12px;
+  }
+  .keys{display:grid;grid-template-columns:repeat(4,1fr); gap:10px;}
+  .key{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:10px;padding:14px;font-weight:700;font-size:18px;color:#eaf9ff;
+    border:1px solid rgba(255,255,255,0.03);
+    cursor:pointer;
+    box-shadow: 0 8px 20px rgba(47,128,255,0.04);
+    text-align:center;
+  }
+  .key.op{ background: linear-gradient(90deg,var(--accent1),var(--accent2)); }
+  .key.clear{ background: rgba(255,100,100,0.12); color:#ffdfe0; }
+  .key.equal{ background: linear-gradient(90deg,#3bd094,#00d3a8); color:#012; }
+
+  @media (max-width:920px) {
+    body{padding:18px;}
+    .app, .card{width:92%;}
+  }
+</style>
 </head>
 <body>
 
-  <div class="container">
-    <!-- Login -->
-    <div id="loginBox">
-      <h2><i class="fa-solid fa-user"></i> Login</h2>
-      <input type="text" id="username" placeholder="Enter username">
-      <input type="password" id="password" placeholder="Enter password">
-      <button onclick="login()">Login</button>
-    </div>
-
-    <!-- Calculator -->
-    <div id="calculatorBox" class="calculator">
-      <h2><i class="fa-solid fa-calculator"></i> Calculator</h2>
-      <input type="text" id="calcDisplay" class="display" disabled>
-      <div class="buttons">
-        <button onclick="press('7')">7</button>
-        <button onclick="press('8')">8</button>
-        <button onclick="press('9')">9</button>
-        <button onclick="press('/')">÷</button>
-        <button onclick="press('4')">4</button>
-        <button onclick="press('5')">5</button>
-        <button onclick="press('6')">6</button>
-        <button onclick="press('*')">×</button>
-        <button onclick="press('1')">1</button>
-        <button onclick="press('2')">2</button>
-        <button onclick="press('3')">3</button>
-        <button onclick="press('-')">−</button>
-        <button onclick="press('0')">0</button>
-        <button onclick="press('.')">.</button>
-        <button onclick="calculate()">=</button>
-        <button onclick="press('+')">+</button>
-        <button onclick="clearDisplay()" style="grid-column: span 4; background: #f00;">C</button>
-      </div>
-    </div>
+<div class="card" id="authCard" aria-live="polite">
+  <h2 id="formTitle">Login</h2>
+  <div class="switcher" role="tablist">
+    <button id="loginTab" class="active" aria-selected="true">Login</button>
+    <button id="signupTab" aria-selected="false">Signup</button>
   </div>
 
-  <script>
-    function login() {
-      const user = document.getElementById('username').value;
-      const pass = document.getElementById('password').value;
-      if (user === "admin" && pass === "1234") {
-        document.getElementById('loginBox').style.display = 'none';
-        document.getElementById('calculatorBox').style.display = 'block';
-      } else {
-        alert("Invalid credentials ❌ (Try admin / 1234)");
-      }
-    }
+  <form id="loginForm" autocomplete="on" novalidate>
+    <div class="field">
+      <input id="loginEmail" type="email" placeholder="Email (e.g. you@example.com)" required />
+    </div>
+    <div class="field">
+      <input id="loginPassword" type="password" placeholder="Password" required />
+      <button type="button" class="toggle-pass" data-target="loginPassword" title="Show / hide password">👁</button>
+    </div>
+    <div id="loginMsg" class="message" aria-live="assertive"></div>
+    <button type="submit" class="btn">Login & Open Calculator</button>
+  </form>
 
-    function press(value) {
-      document.getElementById('calcDisplay').value += value;
-    }
-    function calculate() {
-      try {
-        document.getElementById('calcDisplay').value =
-          eval(document.getElementById('calcDisplay').value);
-      } catch {
-        alert("Invalid Expression ❌");
-      }
-    }
-    function clearDisplay() {
-      document.getElementById('calcDisplay').value = "";
-    }
-  </script>
+  <form id="signupForm" style="display:none;" autocomplete="on" novalidate>
+    <div class="field">
+      <input id="signupEmail" type="email" placeholder="Email (e.g. you@example.com)" required />
+    </div>
+    <div class="field">
+      <input id="signupPassword" type="password" placeholder="Password" required />
+      <button type="button" class="toggle-pass" data-target="signupPassword" title="Show / hide password">👁</button>
+    </div>
+    <div class="field">
+      <input id="signupConfirm" type="password" placeholder="Confirm password" required />
+      <button type="button" class="toggle-pass" data-target="signupConfirm" title="Show / hide password">👁</button>
+    </div>
+    <div id="signupMsg" class="message" aria-live="assertive"></div>
+    <button type="submit" class="btn">Create Account & Open Calculator</button>
+  </form>
+</div>
 
+<div class="card app" id="appCard" style="display:none;">
+  <h2>Calculator</h2>
+  <div class="logout-row">
+    <div class="user">Signed in as <strong id="currentUser"></strong></div>
+    <div><button id="logoutBtn" class="btn" style="background:#ff6b6b;">Logout</button></div>
+  </div>
+
+  <div class="calculator" role="application" aria-label="Calculator">
+    <div id="calcDisplay" class="calc-display">0</div>
+    <div class="keys" id="calcKeys">
+      <div class="key">7</div>
+      <div class="key">8</div>
+      <div class="key">9</div>
+      <div class="key op" data-op="/">÷</div>
+
+      <div class="key">4</div>
+      <div class="key">5</div>
+      <div class="key">6</div>
+      <div class="key op" data-op="*">×</div>
+
+      <div class="key">1</div>
+      <div class="key">2</div>
+      <div class="key">3</div>
+      <div class="key op" data-op="-">−</div>
+
+      <div class="key">0</div>
+      <div class="key clear">C</div>
+      <div class="key equal">=</div>
+      <div class="key op" data-op="+">+</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const USERS_KEY = 'galaxy_demo_users';
+function loadUsers(){ try { return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); } catch { return {}; } }
+function saveUsers(obj){ localStorage.setItem(USERS_KEY, JSON.stringify(obj)); }
+
+function isValidEmail(email){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email); }
+function passwordIssues(pw){
+  const issues=[]; if(pw.length<8)issues.push('at least 8 characters');
+  if(!/[a-z]/.test(pw))issues.push('a lowercase letter');
+  if(!/[A-Z]/.test(pw))issues.push('an uppercase letter');
+  if(!/[0-9]/.test(pw))issues.push('a digit');
+  if(!/[\W_]/.test(pw))issues.push('a symbol'); return issues;
+}
+
+const loginTab=document.getElementById('loginTab'), signupTab=document.getElementById('signupTab');
+const loginForm=document.getElementById('loginForm'), signupForm=document.getElementById('signupForm');
+const loginEmail=document.getElementById('loginEmail'), loginPassword=document.getElementById('loginPassword'), loginMsg=document.getElementById('loginMsg');
+const signupEmail=document.getElementById('signupEmail'), signupPassword=document.getElementById('signupPassword'), signupConfirm=document.getElementById('signupConfirm'), signupMsg=document.getElementById('signupMsg');
+const authCard=document.getElementById('authCard'), appCard=document.getElementById('appCard'), logoutBtn=document.getElementById('logoutBtn'), currentUserSpan=document.getElementById('currentUser');
+const calcDisplay=document.getElementById('calcDisplay'), calcKeys=document.getElementById('calcKeys');
+let currentUser=null;
+
+loginTab.addEventListener('click',()=>{loginForm.style.display='flex';signupForm.style.display='none';loginTab.classList.add('active');signupTab.classList.remove('active');loginMsg.textContent='';signupMsg.textContent='';});
+signupTab.addEventListener('click',()=>{loginForm.style.display='none';signupForm.style.display='flex';signupTab.classList.add('active');loginTab.classList.remove('active');loginMsg.textContent='';signupMsg.textContent='';});
+
+document.querySelectorAll('.toggle-pass').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const input=document.getElementById(btn.dataset.target);
+    if(!input)return;
+    input.type=input.type==='password'?'text':'password';
+    btn.textContent=input.type==='password'?'👁':'🚫';
+  });
+});
+
+signupForm.addEventListener('submit',(ev)=>{
+  ev.preventDefault();signupMsg.className='message';signupMsg.textContent='';
+  const email=signupEmail.value.trim(), pw=signupPassword.value, pw2=signupConfirm.value;
+  if(!isValidEmail(email)){signupMsg.textContent='❌ Invalid email';signupEmail.focus();return;}
+  const issues=passwordIssues(pw);if(issues.length){signupMsg.textContent='❌ Password needs '+issues.join(', ');return;}
+  if(pw!==pw2){signupMsg.textContent='❌ Passwords do not match';signupConfirm.focus();return;}
+  const users=loadUsers();if(users[email]){signupMsg.textContent='❌ Account exists';return;}
+  users[email]={pw};saveUsers(users);
+  signupMsg.className='message success';signupMsg.textContent='✔ Account created — signing in...';
+  setTimeout(()=>{signupForm.reset();openApp(email);},700);
+});
+
+loginForm.addEventListener('submit',(ev)=>{
+  ev.preventDefault();loginMsg.className='message';loginMsg.textContent='';
+  const email=loginEmail.value.trim(), pw=loginPassword.value, users=loadUsers();
+  if(!isValidEmail(email)){loginMsg.textContent='❌ Invalid email';return;}
+  if(!users[email]){loginMsg.textContent='❌ Email not found';return;}
+  if(users[email].pw!==pw){loginMsg.textContent='❌ Wrong password';return;}
+  openApp(email);
+});
+
+function openApp(email){
+  currentUser=email;currentUserSpan.textContent=currentUser;
+  authCard.style.display='none';appCard.style.display='block';
+  loginMsg.textContent='';signupMsg.textContent='';loginForm.reset();signupForm.reset();resetCalc();
+}
+logoutBtn.addEventListener('click',()=>{currentUser=null;currentUserSpan.textContent='';authCard.style.display='block';appCard.style.display='none';});
+
+let currentInput='',prevValue=null,operator=null,resultShown=false;
+function resetCalc(){currentInput='';prevValue=null;operator=null;resultShown=false;calcDisplay.textContent='0';}
+function updateCalcDisplay(){calcDisplay.textContent=currentInput!==''?currentInput:(prevValue!==null?String(prevValue):'0');}
+function applyOperation(a,b,op){if(op==='+')return a+b;if(op==='-')return a-b;if(op==='*')return a*b;if(op==='/'){if(b===0)return null;return a/b;}return b;}
+
+calcKeys.addEventListener('click',(e)=>{
+  const el=e.target.closest('.key');if(!el)return;const text=el.textContent.trim();
+  if(/^[0-9]$/.test(text)){if(resultShown&&operator===null){currentInput=text;resultShown=false;}else{currentInput+=text;}updateCalcDisplay();return;}
+  if(el.classList.contains('clear')){resetCalc();return;}
+  if(el.classList.contains('op')){const op=el.dataset.op;if(currentInput!==''){const num=Number(currentInput);if(prevValue===null){prevValue=num;}else if(operator){const c=applyOperation(prevValue,num,operator);if(c===null){calcDisplay.textContent='Error';resetCalc();resultShown=true;return;}prevValue=c;}currentInput='';}operator=op;resultShown=false;updateCalcDisplay();return;}
+  if(el.classList.contains('equal')){if(operator&&currentInput!==''){const num=Number(currentInput);const c=applyOperation(prevValue===null?0:prevValue,num,operator);if(c===null){calcDisplay.textContent='Error';resetCalc();resultShown=true;return;}calcDisplay.textContent=String(Number.isInteger(c)?c:Number(c.toFixed(8)));prevValue=c;currentInput='';operator=null;resultShown=true;}return;}
+});
+
+document.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&authCard.style.display!=='none'){const visibleForm=signupForm.style.display==='flex'?signupForm:loginForm;visibleForm.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));}});
+(function init(){authCard.style.display='block';appCard.style.display='none';loginForm.style.display='flex';signupForm.style.display='none';})();
+</script>
 </body>
 </html>
