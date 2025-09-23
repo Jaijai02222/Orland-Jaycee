@@ -1,140 +1,299 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>To-Do List</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #141414, #2c2c54);
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-    }
-    .todo-container {
-      width: 350px;
-      background: rgba(255,255,255,0.1);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(255,255,255,0.2);
-    }
-    h2 { text-align: center; margin-bottom: 15px; }
-    .input-box {
-      display: flex;
-      margin-bottom: 15px;
-    }
-    .input-box input {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 6px 0 0 6px;
-    }
-    .input-box button {
-      padding: 10px;
-      border: none;
-      border-radius: 0 6px 6px 0;
-      background: #7fffd4;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .input-box button:hover { background: #40e0d0; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🌌 To-Do App</title>
+<style>
+  /* Galaxy Background */
+  body {
+    margin:0;
+    font-family:"Poppins",sans-serif;
+    color:#e6f2ff;
+    background: radial-gradient(circle at 20% 20%, rgba(45,183,255,0.1), transparent 20%),
+                radial-gradient(circle at 80% 70%, rgba(124,77,255,0.12), transparent 20%),
+                linear-gradient(180deg, #071226, #0b2236);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:40px;
+  }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    li {
-      background: rgba(0,0,0,0.5);
-      padding: 10px;
-      margin-bottom: 8px;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    li.done { text-decoration: line-through; color: #aaa; }
-    .actions button {
-      background: none;
-      border: none;
-      color: #7fffd4;
-      cursor: pointer;
-      margin-left: 5px;
-    }
-    .actions button:hover { color: #40e0d0; }
-  </style>
+  /* Starry layers */
+  .stars,.twinkling,.clouds{
+    position:fixed;top:0;left:0;right:0;bottom:0;z-index:-1;
+  }
+  .stars{
+    background:url("https://www.transparenttextures.com/patterns/stardust.png") repeat;
+    animation:moveStars 100s linear infinite;
+  }
+  .twinkling{
+    background:url("https://www.transparenttextures.com/patterns/tiny-crosses.png") repeat;
+    opacity:0.3;
+    animation:twinkle 200s linear infinite;
+  }
+  .clouds{
+    background:url("https://www.transparenttextures.com/patterns/dark-mosaic.png") repeat;
+    opacity:0.07;
+  }
+  @keyframes moveStars{from{background-position:0 0;}to{background-position:-10000px 5000px;}}
+  @keyframes twinkle{from{background-position:0 0;}to{background-position:10000px -5000px;}}
+
+  /* Main App Card */
+  .app{
+    width:700px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    border-radius:20px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.7),0 0 30px rgba(45,183,255,0.15);
+    padding:25px;
+    animation:fadeIn 0.6s;
+    border:1px solid rgba(255,255,255,0.05);
+    backdrop-filter:blur(8px);
+  }
+
+  h1{
+    margin:0 0 20px;
+    font-size:26px;
+    color:#a7d8ff;
+    text-align:center;
+  }
+
+  /* Input row */
+  .input-row{display:flex;gap:10px;margin-bottom:20px;}
+  input[type="text"],select{
+    padding:12px;
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:12px;
+    flex:1;
+    font-size:15px;
+    background:#1a2536;   /* ✅ Solid dark */
+    color:#ffffff;        /* ✅ Visible text */
+    transition:0.3s;
+  }
+  input::placeholder{
+    color:#9cc9ff;        /* ✅ Bright blue placeholder */
+    opacity:1;
+  }
+  input:focus,select:focus{
+    border-color:#2db7ff;
+    outline:none;
+    box-shadow:0 0 8px rgba(45,183,255,0.6);
+  }
+  select{
+    color:#ffffff;
+    background:#1a2536;
+  }
+
+  /* Buttons */
+  button{
+    border:none;
+    border-radius:12px;
+    padding:12px 16px;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.25s;
+  }
+  .btn-add{
+    background:linear-gradient(90deg,#7c4dff,#2db7ff);
+    color:white;
+    box-shadow:0 8px 20px rgba(124,77,255,0.25);
+  }
+  .btn-add:hover{transform:scale(1.05);}
+
+  /* Tasks */
+  ul{list-style:none;padding:0;margin:0;}
+  li{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:rgba(255,255,255,0.04);
+    padding:14px;
+    border-radius:12px;
+    margin-bottom:10px;
+    transition:0.25s;
+    border:1px solid rgba(255,255,255,0.05);
+  }
+  li:hover{transform:scale(1.01);box-shadow:0 0 12px rgba(45,183,255,0.2);}
+  .priority{font-size:13px;font-weight:600;color:#9ef0ff;}
+  .controls button{margin-left:8px;padding:6px 10px;border-radius:8px;}
+  .edit-btn{background:#3b82f6;color:white;}
+  .delete-btn{background:#ef4444;color:white;}
+
+  /* Modals */
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(0,0,0,0.6);
+    display:none;justify-content:center;align-items:center;
+  }
+  .modal{
+    background:#0e1a2b;
+    padding:20px;
+    border-radius:14px;
+    width:400px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.5),0 0 20px rgba(45,183,255,0.2);
+    animation:fadeIn 0.3s;
+    border:1px solid rgba(255,255,255,0.08);
+    color:#eaf9ff;
+  }
+  .modal h2{margin:0 0 12px;color:#a7d8ff;}
+  .modal input,.modal select{
+    width:100%;
+    margin-bottom:12px;
+    padding:10px;
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:10px;
+    background:#1a2536;
+    color:#ffffff;
+  }
+  .modal input::placeholder{color:#9cc9ff;opacity:1;}
+  .modal .actions{text-align:right;}
+  .modal .actions button{margin-left:8px;}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+</style>
 </head>
 <body>
+  <div class="stars"></div>
+  <div class="twinkling"></div>
+  <div class="clouds"></div>
 
-  <div class="todo-container">
-    <h2><i class="fa-solid fa-list-check"></i> To-Do List</h2>
-    <div class="input-box">
-      <input type="text" id="taskInput" placeholder="Add a new task...">
-      <button onclick="addTask()">Add</button>
+  <div class="app">
+    <h1>🌌 To-Do List</h1>
+    <div class="input-row">
+      <input id="newTask" placeholder="Enter task...">
+      <select id="newPriority">
+        <option value="Low">🌱 Low Priority</option>
+        <option value="Medium" selected>⚖️ Normal Priority</option>
+        <option value="High">🔥 High Priority</option>
+      </select>
+      <button class="btn-add" id="addBtn">Add</button>
     </div>
-    <ul id="taskList"></ul>
+    <ul id="todoList"></ul>
   </div>
 
-  <script>
-    const taskList = document.getElementById("taskList");
+  <!-- Edit Modal -->
+  <div class="modal-bg" id="editModal">
+    <div class="modal">
+      <h2>Edit Task</h2>
+      <input id="editText" placeholder="Edit task...">
+      <select id="editPriority">
+        <option value="Low">🌱 Low Priority</option>
+        <option value="Medium">⚖️ Normal Priority</option>
+        <option value="High">🔥 High Priority</option>
+      </select>
+      <div class="actions">
+        <button id="cancelEdit">Cancel</button>
+        <button class="edit-btn" id="saveEdit">Save</button>
+      </div>
+    </div>
+  </div>
 
-    // Load tasks from localStorage
-    window.onload = () => {
-      const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
-      savedTasks.forEach(t => renderTask(t.text, t.done));
+  <!-- Delete Modal -->
+  <div class="modal-bg" id="deleteModal">
+    <div class="modal">
+      <h2>Delete Task</h2>
+      <p id="deleteMsg"></p>
+      <div class="actions">
+        <button id="cancelDelete">Cancel</button>
+        <button class="delete-btn" id="confirmDelete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const LIST_KEY="todo_list";
+let todos=JSON.parse(localStorage.getItem(LIST_KEY)||"[]");
+
+const list=document.getElementById("todoList"),
+      input=document.getElementById("newTask"),
+      priority=document.getElementById("newPriority"),
+      addBtn=document.getElementById("addBtn");
+
+const editModal=document.getElementById("editModal"),
+      editText=document.getElementById("editText"),
+      editPriority=document.getElementById("editPriority"),
+      saveEdit=document.getElementById("saveEdit"),
+      cancelEdit=document.getElementById("cancelEdit");
+
+const deleteModal=document.getElementById("deleteModal"),
+      deleteMsg=document.getElementById("deleteMsg"),
+      confirmDelete=document.getElementById("confirmDelete"),
+      cancelDelete=document.getElementById("cancelDelete");
+
+let editingId=null,deletingId=null;
+
+// Priority labels
+const priorityLabels={
+  "Low":"🌱 Low Priority",
+  "Medium":"⚖️ Normal Priority",
+  "High":"🔥 High Priority"
+};
+
+// Render
+function render(){
+  list.innerHTML="";
+  if(todos.length===0){
+    list.innerHTML="<p style='color:#9ab9d9'>No tasks yet ✨</p>";
+    return;
+  }
+  todos.forEach(t=>{
+    const li=document.createElement("li");
+    li.innerHTML=`
+      <div><b>${t.text}</b> <span class="priority">(${priorityLabels[t.priority]})</span></div>
+      <div class="controls">
+        <button class="edit-btn">Edit</button>
+        <button class="delete-btn">Delete</button>
+      </div>`;
+    li.querySelector(".edit-btn").onclick=()=>{
+      editingId=t.id;
+      editText.value=t.text;
+      editPriority.value=t.priority;
+      editModal.style.display="flex";
     };
+    li.querySelector(".delete-btn").onclick=()=>{
+      deletingId=t.id;
+      deleteMsg.textContent='Delete "'+t.text+'"?';
+      deleteModal.style.display="flex";
+    };
+    list.appendChild(li);
+  });
+}
 
-    function addTask() {
-      const taskInput = document.getElementById("taskInput");
-      const task = taskInput.value.trim();
-      if (task === "") return;
-      renderTask(task, false);
-      saveTasks();
-      taskInput.value = "";
-    }
+// Add
+function addTask(){
+  const text=input.value.trim();
+  if(!text)return;
+  const t={id:Date.now(),text,priority:priority.value};
+  todos.push(t);
+  localStorage.setItem(LIST_KEY,JSON.stringify(todos));
+  input.value="";
+  render();
+}
+addBtn.onclick=addTask;
+input.onkeydown=e=>{if(e.key==="Enter")addTask();}
 
-    function renderTask(text, done) {
-      const li = document.createElement("li");
-      if (done) li.classList.add("done");
+// Edit
+saveEdit.onclick=()=>{
+  todos=todos.map(x=>x.id===editingId?{...x,text:editText.value,priority:editPriority.value}:x);
+  localStorage.setItem(LIST_KEY,JSON.stringify(todos));
+  editModal.style.display="none";
+  render();
+};
+cancelEdit.onclick=()=>editModal.style.display="none";
 
-      const span = document.createElement("span");
-      span.textContent = text;
-      span.onclick = () => {
-        li.classList.toggle("done");
-        saveTasks();
-      };
+// Delete
+confirmDelete.onclick=()=>{
+  todos=todos.filter(x=>x.id!==deletingId);
+  localStorage.setItem(LIST_KEY,JSON.stringify(todos));
+  deleteModal.style.display="none";
+  render();
+};
+cancelDelete.onclick=()=>deleteModal.style.display="none";
 
-      const actions = document.createElement("div");
-      actions.classList.add("actions");
+// Close modal on outside click
+[editModal,deleteModal].forEach(m=>m.onclick=e=>{if(e.target===m)m.style.display="none";});
 
-      const delBtn = document.createElement("button");
-      delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-      delBtn.onclick = () => { li.remove(); saveTasks(); };
-
-      actions.appendChild(delBtn);
-      li.appendChild(span);
-      li.appendChild(actions);
-      taskList.appendChild(li);
-    }
-
-    function saveTasks() {
-      const tasks = [];
-      document.querySelectorAll("#taskList li").forEach(li => {
-        tasks.push({
-          text: li.querySelector("span").textContent,
-          done: li.classList.contains("done")
-        });
-      });
-      localStorage.setItem("tasks", JSON.stringify(tasks));
-    }
-  </script>
-
+render();
+</script>
 </body>
 </html>
