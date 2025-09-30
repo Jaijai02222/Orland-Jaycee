@@ -220,10 +220,18 @@ thead { background: rgba(0,0,0,0.5); }
 /* Projects Section */
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 25px;
   margin-top: 30px;
 }
+
+.projects-grid-row {
+  display: flex;
+  justify-content: center;
+  gap: 25px; /* space between bottom cards */
+  margin-top: 25px;
+}
+
 
 .project-card {
   background: rgba(0,0,0,0.7);
@@ -235,6 +243,12 @@ thead { background: rgba(0,0,0,0.5); }
   text-decoration: none;
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s;
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+
+  width: 280px;   /* ✅ uniform card width */
+  height: 200px;  /* ✅ uniform card height */
+  display: flex; 
+  flex-direction: column;
+  justify-content: center; /* keeps content vertically balanced */
 }
 
 .project-card i {
@@ -350,3 +364,56 @@ footer {
   .astronaut { display: none; } /* still hide on tiny screens */
 }
 
+/* Contact Form */
+.contact-form {
+  margin-top: 2rem;
+  max-width: 500px;   /* ✅ keep it compact */
+  margin-left: auto;
+  margin-right: auto; /* ✅ center inside container */
+  text-align: center;
+}
+
+.contact-form h3 {
+  margin-bottom: 1rem;
+  color: #7fffd4;
+  text-shadow: 0 0 10px #40e0d0;
+}
+
+.contact-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem; /* tighter spacing */
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #7fffd4;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: white;
+  font-size: 1rem;
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  color: #bbb;
+}
+
+.contact-form button {
+  padding: 10px;
+  border: none;
+  background: #7fffd4;
+  color: #000;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.contact-form button:hover {
+  background: #40e0d0;
+  transform: translateY(-2px);
+}
