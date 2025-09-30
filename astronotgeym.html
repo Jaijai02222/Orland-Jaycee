@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🚀 Space Runner</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: radial-gradient(circle at top, #0d0d2b, #000);
+      overflow: hidden;
+      font-family: "Press Start 2P", monospace;
+    }
+    canvas {
+      border: 3px solid #7fffd4;
+      background: transparent;
+    }
+    #overlay {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #fff;
+      font-size: 14px;
+      display: none;
+    }
+    #overlay button {
+      margin-top: 12px;
+      padding: 8px 16px;
+      font-family: inherit;
+      border: none;
+      background: #7fffd4;
+      color: black;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    #overlay button:hover {
+      background: #40e0d0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="1000" height="300"></canvas>
+  <div id="overlay">
+    <p id="finalScore"></p>
+    <button onclick="restartGame()">Restart</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    // ===============================
+    // GAME VARIABLES
+    // ===============================
+    let score = 0, highScore = 0, gameOver = false;
+    let gravity = 0.7, jumpPower = -14, speed = 6, frame = 0; // ✅ Dino-like physics
+
+    // Sounds
+    const jumpSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+    const pointSound = new Audio("https://actions.google.com/sounds/v1/cartoon/pop.ogg");
+    const gameOverSound = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+
+    // ===============================
+    // PLAYER (ASTRONAUT)
+    // ===============================
+    const player = {
+      x: 80, y: canvas.height - 90,
+      w: 40, h: 60,
+      dy: 0, jumping: false,
+      frame: 0
+    };
+
+    function drawAstronaut(x, y) {
+      // Suit
+      ctx.fillStyle = "#e0e0e0";
+      ctx.fillRect(x, y, player.w, player.h);
+
+      // Helmet
+      ctx.fillStyle = "#87ceeb";
+      ctx.beginPath();
+      ctx.arc(x + 20, y + 15, 15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#444";
+      ctx.stroke();
+
+      // Backpack
+      ctx.fillStyle = "#888";
+      ctx.fillRect(x - 8, y + 15, 6, 25);
+
+      // Visor shine
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(x + 15, y + 10, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Legs animation
+      ctx.strokeStyle = "#e0e0e0";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      if (player.frame % 20 < 10) {
+        ctx.moveTo(x + 10, y + player.h);
+        ctx.lineTo(x, y + player.h + 15);
+        ctx.moveTo(x + 30, y + player.h);
+        ctx.lineTo(x + 40, y + player.h + 15);
+      } else {
+        ctx.moveTo(x + 10, y + player.h);
+        ctx.lineTo(x + 5, y + player.h + 15);
+        ctx.moveTo(x + 30, y + player.h);
+        ctx.lineTo(x + 25, y + player.h + 15);
+      }
+      ctx.stroke();
+    }
+
+    // ===============================
+    // ASTEROIDS
+    // ===============================
+    const asteroids = [];
+
+    function spawnAsteroid() {
+      const size = Math.random() * 20 + 25; // ✅ smaller range, always avoidable
+      asteroids.push({
+        x: canvas.width,
+        y: canvas.height - size - 25,
+        size: size,
+        speed: speed + Math.random() * 2,
+        blazing: Math.random() < 0.4 // 40% chance fire tail
+      });
+    }
+
+    function drawAsteroid(a) {
+      // Blazing fire tail
+      if (a.blazing) {
+        const gradient = ctx.createRadialGradient(a.x, a.y, 5, a.x, a.y, a.size);
+        gradient.addColorStop(0, "rgba(255, 140, 0, 0.9)");
+        gradient.addColorStop(0.4, "rgba(255, 69, 0, 0.6)");
+        gradient.addColorStop(1, "rgba(255, 0, 0, 0)");
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.ellipse(a.x + a.size / 1.5, a.y, a.size, a.size / 2, Math.PI / 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Base asteroid body
+      ctx.fillStyle = "#7d7d7d";
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.size / 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Craters
+      ctx.fillStyle = "#555";
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(
+          a.x + (Math.random() * a.size - a.size / 2),
+          a.y + (Math.random() * a.size - a.size / 2),
+          a.size / 6,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+    }
+
+    function updateAsteroids() {
+      asteroids.forEach((a, i) => {
+        a.x -= a.speed;
+
+        // Collision detection
+        if (
+          player.x < a.x + a.size / 2 &&
+          player.x + player.w > a.x - a.size / 2 &&
+          player.y < a.y + a.size / 2 &&
+          player.y + player.h > a.y - a.size / 2
+        ) {
+          endGame();
+        }
+
+        // Remove off-screen
+        if (a.x + a.size < 0) asteroids.splice(i, 1);
+      });
+    }
+
+    // ===============================
+    // BACKGROUND
+    // ===============================
+    const stars = Array.from({ length: 60 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height / 2,
+      r: Math.random() * 2,
+      speed: Math.random() * 0.5 + 0.2
+    }));
+
+    function drawBackground() {
+      // Space gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      grad.addColorStop(0, "#0d0d2b");
+      grad.addColorStop(1, "#000");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Stars
+      ctx.fillStyle = "#fff";
+      stars.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+        s.x -= s.speed;
+        if (s.x < 0) {
+          s.x = canvas.width;
+          s.y = Math.random() * canvas.height / 2;
+        }
+      });
+
+      // Planet
+      ctx.fillStyle = "#6a5acd";
+      ctx.beginPath();
+      ctx.arc(200, 80, 40, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawGround() {
+      ctx.fillStyle = "#444";
+      ctx.fillRect(0, canvas.height - 25, canvas.width, 2);
+    }
+
+    // ===============================
+    // PLAYER UPDATE
+    // ===============================
+    function updatePlayer() {
+      player.y += player.dy;
+      player.dy += gravity;
+      if (player.y >= canvas.height - player.h - 25) {
+        player.y = canvas.height - player.h - 25;
+        player.jumping = false;
+      }
+      player.frame++;
+    }
+
+    // ===============================
+    // SCORE
+    // ===============================
+    function updateScore() {
+      score += 0.05;
+      if (Math.floor(score) % 100 === 0 && Math.floor(score) > 0 && frame % 60 === 0) {
+        pointSound.currentTime = 0; // ✅ fix delayed sound
+        pointSound.play();
+      }
+    }
+
+    function drawScore() {
+      ctx.fillStyle = "#7fffd4";
+      ctx.font = "16px 'Press Start 2P'";
+      ctx.fillText(Math.floor(score).toString().padStart(5, "0"), canvas.width - 140, 30);
+      ctx.fillText("HI " + Math.floor(highScore).toString().padStart(5, "0"), canvas.width - 260, 30);
+    }
+
+    // ===============================
+    // GAME LOOP
+    // ===============================
+    function gameLoop() {
+      if (gameOver) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawBackground();
+      drawGround();
+      drawAstronaut(player.x, player.y);
+      asteroids.forEach(drawAsteroid);
+      drawScore();
+
+      updatePlayer();
+      updateAsteroids();
+      updateScore();
+
+      frame++;
+      if (frame % 120 === 0) spawnAsteroid();
+      if (frame % 600 === 0) speed += 0.3;
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // ===============================
+    // CONTROLS
+    // ===============================
+    function jump() {
+      if (!player.jumping) {
+        player.dy = jumpPower;
+        player.jumping = true;
+        jumpSound.currentTime = 0; // ✅ reset for instant playback
+        jumpSound.play();
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space" || e.code === "ArrowUp") jump();
+    });
+    document.addEventListener("mousedown", jump); // ✅ mouse
+    document.addEventListener("touchstart", jump); // ✅ mobile
+
+    // ===============================
+    // GAME OVER / RESTART
+    // ===============================
+    function endGame() {
+      gameOver = true;
+      highScore = Math.max(score, highScore);
+      gameOverSound.currentTime = 0;
+      gameOverSound.play();
+      document.getElementById("finalScore").textContent =
+        `💀 Game Over! Score: ${Math.floor(score)}`;
+      document.getElementById("overlay").style.display = "block";
+    }
+
+    function restartGame() {
+      asteroids.length = 0;
+      score = 0;
+      frame = 0;
+      speed = 6;
+      player.y = canvas.height - player.h - 25;
+      player.dy = 0;
+      gameOver = false;
+      document.getElementById("overlay").style.display = "none";
+      gameLoop();
+    }
+
+    // ===============================
+    // START GAME
+    // ===============================
+    gameLoop();
+  </script>
+</body>
+</html>
