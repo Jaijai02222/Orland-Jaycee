@@ -1,335 +1,647 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>🚀 Space Runner</title>
-  <style>
-    body {
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: radial-gradient(circle at top, #0d0d2b, #000);
-      overflow: hidden;
-      font-family: "Press Start 2P", monospace;
-    }
-    canvas {
-      border: 3px solid #7fffd4;
-      background: transparent;
-    }
-    #overlay {
-      position: absolute;
-      top: 40%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: #fff;
-      font-size: 14px;
-      display: none;
-    }
-    #overlay button {
-      margin-top: 12px;
-      padding: 8px 16px;
-      font-family: inherit;
-      border: none;
-      background: #7fffd4;
-      color: black;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    #overlay button:hover {
-      background: #40e0d0;
-    }
-  </style>
+<meta charset="utf-8">
+<title>🚀 Space Runner Ultimate</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+html,body{margin:0;padding:0;height:100%;background:#000;font-family:"Press Start 2P",monospace;overflow:hidden;}
+#gameWrap{position:relative;width:100%;height:100%;display:flex;justify-content:center;align-items:center;}
+canvas{border:2px solid #7fffd4;background:radial-gradient(circle at top,#0d0d2b,#000);}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.uiCard{pointer-events:auto;background:rgba(0,0,0,0.85);border:2px solid rgba(127,255,212,0.3);color:white;padding:18px;text-align:center;border-radius:10px;}
+.btn{background:#7fffd4;color:#000;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-family:inherit;margin-top:12px;}
+.btn:hover{background:#40e0d0;}
+
+/* HUD inside game container */
+#hud {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: row;   /* horizontal */
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
+#score, #highScore {
+  color: #7fffd4;
+  font-size: 16px;
+}
+
+#pauseBtn, #volumeBtn {
+  pointer-events: auto;
+}
+
+.hud-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+}
+
+#gameContainer {
+  position: relative;
+  display: inline-block;
+}
+
+#hud {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
+#score, #highScore {
+  color: #7fffd4;
+  font-size: 16px;
+}
+
+#pauseBtn, #volumeBtn {
+  pointer-events: auto;
+}
+
+.hud-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+}
+
+
+</style>
 </head>
 <body>
-  <canvas id="game" width="1000" height="300"></canvas>
-  <div id="overlay">
-    <p id="finalScore"></p>
-    <button onclick="restartGame()">Restart</button>
+<div id="gameWrap">
+  <div id="gameContainer">
+    <canvas id="game" width="900" height="320"></canvas>
+
+    <!-- HUD inside the game box -->
+    <div id="hud">
+      <div id="score">00000</div>
+      <div id="highScore">HI: 00000</div>
+      <div class="hud-buttons">
+        <div id="pauseBtn" style="display:none;">
+          <button class="btn" id="pauseToggle">⏸ Pause</button>
+        </div>
+        <div id="volumeBtn">
+          <button class="btn" id="volumeToggle">🔊</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+ 
+<!-- Start Overlay -->
+<div id="startOverlay" class="overlay">
+  <div class="uiCard">
+    <h3>🚀 Space Runner Ultimate</h3>
+    <p>Controls: Space / ↑ / Click / Tap to jump (hold for long jump), ↓ to duck</p>
+    <button class="btn" id="startBtn">▶ Start</button>
+  </div>
+</div>
 
-    // ===============================
-    // GAME VARIABLES
-    // ===============================
-    let score = 0, highScore = 0, gameOver = false;
-    let gravity = 0.7, jumpPower = -14, speed = 6, frame = 0; // ✅ Dino-like physics
+<!-- Game Over Overlay -->
+<div id="gameOverOverlay" class="overlay" style="display:none">
+  <div class="uiCard">
+    <h3>💀 Game Over</h3>
+    <p id="finalScore">Score: 0</p>
+    <button class="btn" id="restartBtn">↻ Restart</button>
+  </div>
+</div>
+</div>
 
-    // Sounds
-    const jumpSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-    const pointSound = new Audio("https://actions.google.com/sounds/v1/cartoon/pop.ogg");
-    const gameOverSound = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+<script>
+// ============================
+// SPACE RUNNER ULTIMATE
+// ============================
 
-    // ===============================
-    // PLAYER (ASTRONAUT)
-    // ===============================
-    const player = {
-      x: 80, y: canvas.height - 90,
-      w: 40, h: 60,
-      dy: 0, jumping: false,
-      frame: 0
-    };
+// Canvas
+const canvas = document.getElementById('game'),
+      ctx = canvas.getContext('2d');
 
-    function drawAstronaut(x, y) {
-      // Suit
-      ctx.fillStyle = "#e0e0e0";
-      ctx.fillRect(x, y, player.w, player.h);
+// UI Elements
+const startOverlay = document.getElementById('startOverlay');
+const gameOverOverlay = document.getElementById('gameOverOverlay');
+const finalScoreText = document.getElementById('finalScore');
+const startBtn = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
+const pauseBtnWrap = document.getElementById('pauseBtn');
+const pauseToggle = document.getElementById('pauseToggle');
+const scoreDisplay = document.getElementById('score');
+const highScoreDisplay = document.getElementById('highScore');
+const volumeToggle = document.getElementById('volumeToggle');
 
-      // Helmet
-      ctx.fillStyle = "#87ceeb";
-      ctx.beginPath();
-      ctx.arc(x + 20, y + 15, 15, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#444";
-      ctx.stroke();
+// Game State
+let running = false, paused = false, gameOver = false;
+let score = 0, highScore = 0, speed = 6, frame = 0, lastMilestone = 0;
+let raf = null;
+let muted = false;
 
-      // Backpack
-      ctx.fillStyle = "#888";
-      ctx.fillRect(x - 8, y + 15, 6, 25);
+// Physics
+const GRAVITY = 0.7;
+const SHORT_JUMP_POWER = -10;
+const LONG_JUMP_EXTRA = -4;
+const MAX_HOLD = 220;
 
-      // Visor shine
-      ctx.fillStyle = "white";
-      ctx.beginPath();
-      ctx.arc(x + 15, y + 10, 5, 0, Math.PI * 2);
-      ctx.fill();
+let isHolding = false, holdStart = 0;
 
-      // Legs animation
-      ctx.strokeStyle = "#e0e0e0";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      if (player.frame % 20 < 10) {
-        ctx.moveTo(x + 10, y + player.h);
-        ctx.lineTo(x, y + player.h + 15);
-        ctx.moveTo(x + 30, y + player.h);
-        ctx.lineTo(x + 40, y + player.h + 15);
-      } else {
-        ctx.moveTo(x + 10, y + player.h);
-        ctx.lineTo(x + 5, y + player.h + 15);
-        ctx.moveTo(x + 30, y + player.h);
-        ctx.lineTo(x + 25, y + player.h + 15);
-      }
-      ctx.stroke();
-    }
+// Player
+const player = { x: 80, y: canvas.height - 100, w: 40, h: 60, dy: 0, jumping: false, ducking: false, frame: 0 };
 
-    // ===============================
-    // ASTEROIDS
-    // ===============================
-    const asteroids = [];
+// Background
+let stars = [], ships = [], bgRocks = [], satellites = [];
+function initBackground() {
+  stars = Array.from({ length: 80 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height / 2,
+    r: Math.random() * 1.5 + 0.5,
+    speed: Math.random() * 0.5 + 0.2
+  }));
+  ships = Array.from({ length: 3 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * 100 + 50,
+    speed: Math.random() * 1 + 1,
+    c: '#88f'
+  }));
+  bgRocks = Array.from({ length: 6 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height * 0.7,
+    r: Math.random() * 25 + 15,
+    rot: Math.random() * Math.PI * 2,
+    speed: Math.random() * 1.2 + 0.5
+  }));
+  satellites = Array.from({ length: 3 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height / 3,
+    r: 10 + Math.random() * 10,
+    speed: 1.2
+  }));
+}
+initBackground();
 
-    function spawnAsteroid() {
-      const size = Math.random() * 20 + 25; // ✅ smaller range, always avoidable
-      asteroids.push({
-        x: canvas.width,
-        y: canvas.height - size - 25,
-        size: size,
-        speed: speed + Math.random() * 2,
-        blazing: Math.random() < 0.4 // 40% chance fire tail
-      });
-    }
+// Obstacles
+let obstacles = [];
 
-    function drawAsteroid(a) {
-      // Blazing fire tail
-      if (a.blazing) {
-        const gradient = ctx.createRadialGradient(a.x, a.y, 5, a.x, a.y, a.size);
-        gradient.addColorStop(0, "rgba(255, 140, 0, 0.9)");
-        gradient.addColorStop(0.4, "rgba(255, 69, 0, 0.6)");
-        gradient.addColorStop(1, "rgba(255, 0, 0, 0)");
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.ellipse(a.x + a.size / 1.5, a.y, a.size, a.size / 2, Math.PI / 6, 0, Math.PI * 2);
-        ctx.fill();
-      }
+// Sounds & Music
+function makeAudio(url, vol = 1) {
+  let a = new Audio(url);
+  a.volume = vol;
+  return a;
+}
+const sJump = makeAudio('https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg', 0.5);
+const sPoint = makeAudio('https://actions.google.com/sounds/v1/cartoon/metal_twang.ogg', 0.7);
+const sGameOver = makeAudio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg', 0.9);
+const bgMusic = makeAudio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 0.2);
+bgMusic.loop = true;
 
-      // Base asteroid body
-      ctx.fillStyle = "#7d7d7d";
-      ctx.beginPath();
-      ctx.arc(a.x, a.y, a.size / 2, 0, Math.PI * 2);
-      ctx.fill();
+// -----------------
+// Draw Functions
+// -----------------
+function drawBackground() {
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Craters
-      ctx.fillStyle = "#555";
-      for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.arc(
-          a.x + (Math.random() * a.size - a.size / 2),
-          a.y + (Math.random() * a.size - a.size / 2),
-          a.size / 6,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-      }
-    }
+  // stars
+  ctx.fillStyle = '#fff';
+  stars.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, 2 * Math.PI);
+    ctx.fill();
+    s.x -= s.speed;
+    if (s.x < -2) { s.x = canvas.width + 2; s.y = Math.random() * canvas.height / 2; }
+  });
 
-    function updateAsteroids() {
-      asteroids.forEach((a, i) => {
-        a.x -= a.speed;
+  // spaceships (decorative background)
+  ships.forEach(s => {
+    drawShip(s);
+    s.x -= s.speed;
+    if (s.x < -120) s.x = canvas.width + 200;
+  });
 
-        // Collision detection
-        if (
-          player.x < a.x + a.size / 2 &&
-          player.x + player.w > a.x - a.size / 2 &&
-          player.y < a.y + a.size / 2 &&
-          player.y + player.h > a.y - a.size / 2
-        ) {
-          endGame();
-        }
+  // satellites
+  satellites.forEach(s => {
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.fillStyle = 'silver';
+    ctx.fillRect(-s.r / 2, -s.r / 2, s.r, s.r / 3);
+    ctx.fillRect(-s.r / 6, -s.r / 2, s.r / 3, s.r);
+    ctx.restore();
+    s.x -= s.speed;
+    if (s.x < -50) s.x = canvas.width + 50;
+  });
 
-        // Remove off-screen
-        if (a.x + a.size < 0) asteroids.splice(i, 1);
-      });
-    }
+  // bg asteroids
+  bgRocks.forEach(r => {
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#aaa';
+    ctx.beginPath();
+    ctx.ellipse(r.x, r.y, r.r * 1.2, r.r, r.rot, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+    r.x -= r.speed;
+    r.rot += 0.01;
+    if (r.x < -50) r.x = canvas.width + 50;
+  });
+}
 
-    // ===============================
-    // BACKGROUND
-    // ===============================
-    const stars = Array.from({ length: 60 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height / 2,
-      r: Math.random() * 2,
-      speed: Math.random() * 0.5 + 0.2
-    }));
+function drawShip(s) {
+  ctx.save();
+  ctx.translate(s.x, s.y);
+  ctx.fillStyle = s.c;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 20, 10, 0, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.fillStyle = '#cfe9ff';
+  ctx.beginPath();
+  ctx.arc(0, -5, 8, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.fillStyle = 'orange';
+  ctx.beginPath();
+  ctx.moveTo(-20, 0);
+  ctx.lineTo(-28, -4);
+  ctx.lineTo(-28, 4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
 
-    function drawBackground() {
-      // Space gradient
-      const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      grad.addColorStop(0, "#0d0d2b");
-      grad.addColorStop(1, "#000");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+function drawAstronaut(x, y) {
+  let drawH = player.ducking ? player.h / 2 : player.h;
+  ctx.fillStyle = "#e0e0e0";
+  ctx.fillRect(x, y, player.w, drawH);
+  ctx.fillStyle = "#87ceeb";
+  ctx.beginPath();
+  ctx.arc(x + 20, y + 15, 15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#444";
+  ctx.stroke();
+  ctx.fillStyle = "#888";
+  ctx.fillRect(x - 8, y + 15, 6, 25);
+  ctx.fillStyle = "white";
+  ctx.beginPath();
+  ctx.arc(x + 15, y + 10, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#e0e0e0";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  if (player.frame % 20 < 10) {
+    ctx.moveTo(x + 10, y + drawH);
+    ctx.lineTo(x, y + drawH + 15);
+    ctx.moveTo(x + 30, y + drawH);
+    ctx.lineTo(x + 40, y + drawH + 15);
+  } else {
+    ctx.moveTo(x + 10, y + drawH);
+    ctx.lineTo(x + 5, y + drawH + 15);
+    ctx.moveTo(x + 30, y + drawH);
+    ctx.lineTo(x + 25, y + drawH + 15);
+  }
+  ctx.stroke();
+}
 
-      // Stars
-      ctx.fillStyle = "#fff";
-      stars.forEach(s => {
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-        s.x -= s.speed;
-        if (s.x < 0) {
-          s.x = canvas.width;
-          s.y = Math.random() * canvas.height / 2;
-        }
-      });
+// Asteroids (with blazing fire effect)
+function spawnAsteroid() {
+  const size = Math.random() * 20 + 25; // diameter-ish
+  // place so the bottom of the asteroid sits a consistent distance above the ground baseline (same baseline used by UFOs)
+  const baselineY = canvas.height - 25; // ground reference
+  // position the asteroid center so it appears to touch ground-ish like before
+  const y = baselineY - size * 0.5;
+  // slower asteroids (enough warning time)
+  
+obstacles.push({ 
+  type: 'asteroid', 
+  x: canvas.width + 30, 
+  y, 
+  size, 
+  speed: speed * 0.6 + Math.random() * 1.2,  // slower
+  rot: Math.random() * Math.PI * 2, 
+  flameOffset: Math.random() * 20 
+});
+}
+function drawAsteroid(a) {
+  // draw core rock with rotation and irregularity
+  ctx.save();
+  ctx.translate(a.x, a.y);
+  // subtle rotation
+  a.rot += 0.01 + (a.size * 0.0005);
+  ctx.rotate(a.rot);
 
-      // Planet
-      ctx.fillStyle = "#6a5acd";
-      ctx.beginPath();
-      ctx.arc(200, 80, 40, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  // irregular jagged rock shape
+  ctx.beginPath();
+  const radius = a.size / 2;
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const r = radius * (0.8 + Math.random() * 0.4);
+    const px = Math.cos(angle) * r;
+    const py = Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
 
-    function drawGround() {
-      ctx.fillStyle = "#444";
-      ctx.fillRect(0, canvas.height - 25, canvas.width, 2);
-    }
+  // rock fill
+  const rockGrad = ctx.createLinearGradient(-radius, -radius, radius, radius);
+  rockGrad.addColorStop(0, '#8a8a8a');
+  rockGrad.addColorStop(1, '#5d5d5d');
+  ctx.fillStyle = rockGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#2d2d2d';
+  ctx.lineWidth = Math.max(1, radius * 0.08);
+  ctx.stroke();
 
-    // ===============================
-    // PLAYER UPDATE
-    // ===============================
-    function updatePlayer() {
-      player.y += player.dy;
-      player.dy += gravity;
-      if (player.y >= canvas.height - player.h - 25) {
-        player.y = canvas.height - player.h - 25;
-        player.jumping = false;
-      }
-      player.frame++;
-    }
+  // inner highlight
+  ctx.beginPath();
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.ellipse(-radius * 0.2, -radius * 0.2, radius * 0.6, radius * 0.4, 0, 0, Math.PI * 2);
+  ctx.fill();
 
-    // ===============================
-    // SCORE
-    // ===============================
-    function updateScore() {
-      score += 0.05;
-      if (Math.floor(score) % 100 === 0 && Math.floor(score) > 0 && frame % 60 === 0) {
-        pointSound.currentTime = 0; // ✅ fix delayed sound
-        pointSound.play();
-      }
-    }
+  // fire / blazing tail: draw behind the rock toward left (since it moves left)
+  ctx.globalCompositeOperation = 'lighter';
+  const flameLength = radius * (1.2 + Math.random() * 0.8);
+  const flameGrad = ctx.createLinearGradient(radius * 0.2, 0, -flameLength - radius * 0.2, 0);
+  flameGrad.addColorStop(0, 'rgba(255,250,180,0.95)');
+  flameGrad.addColorStop(0.25, 'rgba(255,150,60,0.9)');
+  flameGrad.addColorStop(0.6, 'rgba(230,60,20,0.8)');
+  flameGrad.addColorStop(1, 'rgba(120,20,10,0.1)');
+  ctx.fillStyle = flameGrad;
+  ctx.beginPath();
+  ctx.ellipse(radius * 0.4, 0, flameLength, radius * 0.9, Math.PI, 0, Math.PI * 2);
+  ctx.fill();
 
-    function drawScore() {
-      ctx.fillStyle = "#7fffd4";
-      ctx.font = "16px 'Press Start 2P'";
-      ctx.fillText(Math.floor(score).toString().padStart(5, "0"), canvas.width - 140, 30);
-      ctx.fillText("HI " + Math.floor(highScore).toString().padStart(5, "0"), canvas.width - 260, 30);
-    }
+  // small ember sparks
+  for (let i = 0; i < 6; i++) {
+    const fx = -Math.random() * flameLength - radius * 0.2;
+    const fy = (Math.random() - 0.5) * radius * 1.2;
+    ctx.beginPath();
+    const s = Math.random() * (radius * 0.12) + 1;
+    ctx.fillStyle = `rgba(255,${120 + Math.floor(Math.random()*80)},${30 + Math.floor(Math.random()*30)},${0.6 + Math.random()*0.4})`;
+    ctx.arc(fx, fy, s, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
-    // ===============================
-    // GAME LOOP
-    // ===============================
-    function gameLoop() {
-      if (gameOver) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.restore();
 
-      drawBackground();
-      drawGround();
-      drawAstronaut(player.x, player.y);
-      asteroids.forEach(drawAsteroid);
-      drawScore();
+  // motion
+  a.x -= a.speed;
+}
 
-      updatePlayer();
-      updateAsteroids();
-      updateScore();
+// UFOs (now aligned to same ground-level band as asteroids)
+function spawnUFO() {
+  // use same baseline as asteroids so they line up vertically
+  const uWidth = 60;
+  const uHeight = 30;
+  // baseline reference (same as asteroids): the "ground reference" is canvas.height - 25
+  const baselineY = canvas.height - 25;
+  // center the UFO so its bottom sits similar to asteroids' bottom
+  // UFO center y:
+  const centerY = baselineY - (uHeight / 2);
+  // add a tiny vertical randomization so they're not identical every time
+  const y = centerY - Math.floor(Math.random() * 8);
+  obstacles.push({ type: 'ufo', x: canvas.width + 80, y: y, w: uWidth, h: uHeight, speed: speed + 1.4 });
+}
+function drawUFO(u) {
+  ctx.save();
+  ctx.translate(u.x, u.y);
+  ctx.fillStyle = '#8e44ad';
+  // top dome
+  ctx.beginPath();
+  ctx.ellipse(0, -4, 28, 12, 0, Math.PI, 2 * Math.PI);
+  ctx.fill();
+  // body
+  ctx.fillStyle = '#3b3b3b';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 34, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#ddd";
+  ctx.lineWidth = 1;
+  ctx.stroke();
 
-      frame++;
-      if (frame % 120 === 0) spawnAsteroid();
-      if (frame % 600 === 0) speed += 0.3;
+  // cockpit light
+  ctx.fillStyle = '#f1c40f';
+  ctx.beginPath();
+  ctx.arc(8, -8, 8, 0, 2 * Math.PI);
+  ctx.fill();
 
-      requestAnimationFrame(gameLoop);
-    }
+  // small flame / engine glow at rear, matching asteroid visual theme
+  ctx.globalCompositeOperation = 'lighter';
+  const flameGrad = ctx.createLinearGradient(10, 0, 40, 0);
+  flameGrad.addColorStop(0, 'rgba(255,160,20,0.9)');
+  flameGrad.addColorStop(1, 'rgba(255,80,20,0.0)');
+  ctx.fillStyle = flameGrad;
+  ctx.beginPath();
+  ctx.ellipse(-28, 0, 10, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
 
-    // ===============================
-    // CONTROLS
-    // ===============================
-    function jump() {
-      if (!player.jumping) {
-        player.dy = jumpPower;
-        player.jumping = true;
-        jumpSound.currentTime = 0; // ✅ reset for instant playback
-        jumpSound.play();
-      }
-    }
+  ctx.restore();
+}
 
-    document.addEventListener("keydown", e => {
-      if (e.code === "Space" || e.code === "ArrowUp") jump();
-    });
-    document.addEventListener("mousedown", jump); // ✅ mouse
-    document.addEventListener("touchstart", jump); // ✅ mobile
+// Lasers (duck-only obstacle) - raised higher so player can duck under
+function spawnLaser() {
+  const h = 40; // laser height (visual box height)
+  // Raise lasers a bit higher than before so a ducking player (half height) fits under reliably.
+  // previous: y = canvas.height - h - 25
+  // new: move upward by extra 20px (smaller y value => higher on screen)
+  const extraRaise = 20;
+  const y = canvas.height - h - 25 - extraRaise;
+  obstacles.push({ type: 'laser', x: canvas.width + 50, y: y, w: 100, h: h / 4, speed: speed + 2 });
+}
+function drawLaser(l) {
+  // make laser look energetic (glow + core)
+  ctx.save();
+  // core
+  ctx.fillStyle = 'rgba(255,50,50,0.95)';
+  ctx.fillRect(l.x, l.y, l.w, l.h);
+  // glow
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = 'rgba(255,100,50,0.12)';
+  ctx.fillRect(l.x - 10, l.y - 6, l.w + 20, l.h + 12);
+  // beam stripes
+  ctx.fillStyle = 'rgba(255,200,120,0.12)';
+  for (let i = 0; i < 3; i++) {
+    ctx.fillRect(l.x + (i * 14) % (l.w), l.y, 6, l.h);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.strokeStyle = 'yellow';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(l.x, l.y, l.w, l.h);
+  ctx.restore();
+}
 
-    // ===============================
-    // GAME OVER / RESTART
-    // ===============================
-    function endGame() {
-      gameOver = true;
-      highScore = Math.max(score, highScore);
-      gameOverSound.currentTime = 0;
-      gameOverSound.play();
-      document.getElementById("finalScore").textContent =
-        `💀 Game Over! Score: ${Math.floor(score)}`;
-      document.getElementById("overlay").style.display = "block";
-    }
+// Collision
+function checkCollision(o) {
+  const px = player.x, py = player.y, pw = player.w, ph = player.ducking ? player.h / 2 : player.h;
+  if (o.type === 'asteroid') {
+    // circular asteroid vs player rect collision (approx)
+    const ax = o.x, ay = o.y, ar = o.size / 2;
+    // nearest point on rect to circle center
+    const nearestX = Math.max(px, Math.min(ax, px + pw));
+    const nearestY = Math.max(py, Math.min(ay, py + ph));
+    const dx = ax - nearestX;
+    const dy = ay - nearestY;
+    return (dx * dx + dy * dy) < (ar * ar);
+  } else {
+    // rectangular obstacles (ufo/laser)
+    // ensure each obstacle has w,h defined
+    const ow = o.w || (o.size || 40);
+    const oh = o.h || (o.size || 40);
+    return !(px > o.x + ow || px + pw < o.x || py > o.y + oh || py + ph < o.y);
+  }
+}
 
-    function restartGame() {
-      asteroids.length = 0;
-      score = 0;
-      frame = 0;
-      speed = 6;
-      player.y = canvas.height - player.h - 25;
-      player.dy = 0;
-      gameOver = false;
-      document.getElementById("overlay").style.display = "none";
-      gameLoop();
-    }
+// -----------------
+// Game Loop
+// -----------------
+function loop() {
+  if (!running || paused) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBackground();
+  drawAstronaut(player.x, player.y);
 
-    // ===============================
-    // START GAME
-    // ===============================
-    gameLoop();
-  </script>
+  // obstacles
+  obstacles.forEach(o => {
+    if (o.type === 'asteroid') { drawAsteroid(o); o.x -= o.speed; }
+    else if (o.type === 'ufo') { drawUFO(o); o.x -= o.speed; }
+    else if (o.type === 'laser') { drawLaser(o); o.x -= o.speed; }
+    if (checkCollision(o)) return endGame();
+  });
+  // keep obstacles until they've gone off left side (with some margin)
+  obstacles = obstacles.filter(o => o.x + 200 > 0);
+
+  // physics with long jump
+  player.y += player.dy;
+  if (isHolding && player.dy < 0 && (Date.now() - holdStart) < MAX_HOLD) {
+    player.dy += (GRAVITY * 0.2);
+    player.dy += LONG_JUMP_EXTRA * 0.02;
+  } else {
+    player.dy += GRAVITY;
+  }
+
+  const groundY = canvas.height - (player.ducking ? player.h / 2 : player.h) - 25;
+  if (player.y >= groundY) {
+    player.y = groundY;
+    player.dy = 0;
+    player.jumping = false;
+  }
+  player.frame++;
+
+  // score
+  score += 0.1 * (speed / 6);
+  const m = Math.floor(score / 100);
+  if (m > lastMilestone) {
+    lastMilestone = m;
+    sPoint.currentTime = 0;
+    sPoint.play();
+  }
+  scoreDisplay.textContent = Math.floor(score).toString().padStart(5, '0');
+  highScoreDisplay.textContent = "HI: " + highScore.toString().padStart(5, '0');
+
+  frame++;
+  if (frame % Math.max(90, 130 - speed * 5) === 0) {
+    const roll = Math.random();
+    if (roll < 0.4) spawnAsteroid();
+    else if (roll < 0.8) spawnUFO();
+    else spawnLaser();
+  }
+  if (frame % 700 === 0) speed += 0.4;
+
+  raf = requestAnimationFrame(loop);
+}
+
+// -----------------
+// Input
+// -----------------
+function jump() {
+  if (!player.jumping) {
+    player.dy = SHORT_JUMP_POWER;
+    player.jumping = true;
+    sJump.currentTime = 0;
+    sJump.play();
+    holdStart = Date.now();
+    isHolding = true;
+  }
+}
+function startHold() { isHolding = true; holdStart = Date.now(); }
+function stopHold() { isHolding = false; }
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') {
+    e.preventDefault();
+    if (!isHolding) { startHold(); jump(); }
+  } else if (e.code === 'ArrowDown') player.ducking = true;
+});
+document.addEventListener('keyup', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') stopHold();
+  else if (e.code === 'ArrowDown') player.ducking = false;
+});
+
+canvas.addEventListener('mousedown', () => { if (!isHolding) { startHold(); jump(); } });
+document.addEventListener('mouseup', () => stopHold());
+canvas.addEventListener('touchstart', e => { if (!isHolding) { startHold(); jump(); } }, { passive: false });
+document.addEventListener('touchend', () => stopHold());
+
+// -----------------
+// Controls
+// -----------------
+pauseToggle.addEventListener('click', () => {
+  if (!running) return;
+  paused = !paused;
+  if (paused) {
+    pauseToggle.textContent = '▶ Resume';
+    bgMusic.pause();
+  } else {
+    pauseToggle.textContent = '⏸ Pause';
+    if (!muted) bgMusic.play();
+    loop();
+  }
+});
+
+startBtn.addEventListener('click', () => { startOverlay.style.display = 'none'; startGame(); bgMusic.play(); });
+restartBtn.addEventListener('click', () => { gameOverOverlay.style.display = 'none'; startGame(); bgMusic.play(); });
+volumeToggle.addEventListener('click', () => {
+  muted = !muted;
+  [sJump, sPoint, sGameOver, bgMusic].forEach(a => a.muted = muted);
+  volumeToggle.textContent = muted ? '🔇' : '🔊';
+});
+
+// -----------------
+// Game Functions
+// -----------------
+function startGame() {
+  running = true;
+  paused = false;
+  gameOver = false;
+  score = 0;
+  speed = 6;
+  frame = 0;
+  lastMilestone = 0;
+  obstacles = [];
+  player.y = canvas.height - player.h - 25;
+  player.dy = 0;
+  player.jumping = false;
+  player.ducking = false;
+  pauseBtnWrap.style.display = 'block';
+  loop();
+}
+function endGame() {
+  gameOver = true;
+  running = false;
+  cancelAnimationFrame(raf);
+  highScore = Math.max(highScore, Math.floor(score));
+  finalScoreText.textContent = 'Score: ' + Math.floor(score);
+  highScoreDisplay.textContent = "HI: " + highScore.toString().padStart(5, '0');
+  gameOverOverlay.style.display = 'flex';
+  sGameOver.currentTime = 0;
+  sGameOver.play();
+  pauseBtnWrap.style.display = 'none';
+  bgMusic.pause();
+  bgMusic.currentTime = 0;
+}
+</script>
 </body>
 </html>
